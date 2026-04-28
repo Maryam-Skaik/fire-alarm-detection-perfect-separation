@@ -1,139 +1,184 @@
-# 🔥 Smoke Detector — Fire Alarm Classification (Near-Perfect Separability)
+# 🔥 Fire Detection using Sensor Data (Machine Learning Project)
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-orange)
-![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-lightgrey)
-![Status](https://img.shields.io/badge/Status-Completed-success)
-![Task](https://img.shields.io/badge/Task-Classification-blueviolet)
-
----
-
-## 📌 Overview
-
-This project explores a **smoke detector / fire alarm dataset** using machine learning models to classify whether a fire alarm is triggered (`Fire Alarm = 1`) or not (`0`).
-
-During experimentation, the model achieved **near-perfect performance (≈ 1.00 accuracy, precision, recall, and F1-score)** on both training and testing data — an unusual but insightful result.
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-ML-orange)
+![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-green)
+![Status](https://img.shields.io/badge/Project-Completed-success)
 
 ---
 
-## 🎯 Objective
+## 📌 Project Overview
 
-- Build a classification model to predict fire alarm events  
-- Analyze sensor data behavior  
-- Investigate the reason behind **perfect model performance**  
+This project focuses on building a **machine learning system for fire detection** using environmental and gas sensor data.  
+The goal is to predict whether a **fire alarm is triggered (1)** or not (0) based on multiple sensor readings.
+
+The workflow includes:
+- Data cleaning and preprocessing
+- Handling missing and invalid values
+- Exploratory Data Analysis (EDA)
+- Feature encoding and scaling
+- Model training and tuning
+- Model evaluation and comparison
+- Feature importance analysis
 
 ---
 
 ## 📊 Dataset Description
 
-The dataset contains environmental sensor readings such as:
+The dataset contains sensor readings such as:
 
-- 🌫️ **PM1.0 / PM2.5** — particulate matter (smoke)
-- 🌬️ **eCO₂** — estimated carbon dioxide concentration  
-- 🧪 **Raw H₂ / Ethanol** — gas sensor readings  
-- 💧 **Humidity**
-- 🌡️ **Temperature**
-- 🔢 **NC features** — particle counts  
-- 🎯 **Target:** `Fire Alarm` (0 = No Fire, 1 = Fire)
-
----
-
-## ⚙️ Preprocessing
-
-- Removed redundant columns:
-  - `Unnamed: 0`, `Unnamed: 1`
-- Handled missing values:
-  - Median imputation for numerical features
-- Built preprocessing pipeline using:
-  - `ColumnTransformer`
-  - `SimpleImputer`
-  - `OneHotEncoder` (if needed)
+- 🌡 Temperature
+- 💧 Humidity
+- 🌫 CO2 levels (eCO2)
+- 🧪 Gas sensors (H2, Ethanol)
+- 🌬 Particle sensors (PM1.0, PM2.5, NC0.5, NC1.0, NC2.5)
+- ⏱ Timestamp (UTC)
+- ⚙ Pressure
+- 🚨 Fire Alarm (Target variable)
 
 ---
 
-## 🤖 Model
+## 🧹 Data Preprocessing
 
-### RandomForestClassifier
+### 🔴 Handling invalid values
+- Negative humidity values were detected and replaced with `NaN` since relative humidity cannot be negative.
+- Missing values were handled during preprocessing pipelines.
 
-- Used as the main model
-- No heavy tuning (baseline model)
-- Evaluated using:
-  - Confusion Matrix
-  - Classification Report
-  - Cross-validation
-
----
-
-## 📈 Results
-
-### 🔹 Training Performance
-- Accuracy: **1.00**
-- Precision / Recall / F1-score: **1.00**
-
-### 🔹 Testing Performance
-- Accuracy: **1.00**
-- Precision / Recall / F1-score: **1.00**
-
-### 🔹 Cross-Validation
-- Scores: ~**0.999 across all folds**
+### 🟠 Feature types
+- Numerical features: sensor readings (temperature, CO2, particles, etc.)
+- Ordinal categorical features:
+  - Raw Ethanol (Low → Very Low → Medium → High)
+  - Pressure[hPa] (Low → Med → High)
 
 ---
 
-## 🚨 Key Insight
+## 🔧 Feature Engineering
 
-> The dataset is **highly separable**, not the model being “too powerful”.
+### Encoding
+- Ordinal encoding was applied to ordered categorical features.
+- Numerical features were scaled using `StandardScaler`.
 
-### Why?
-
-- Fire events produce **strong spikes** in:
-  - PM2.5 (smoke)
-  - Gas concentrations (eCO₂, H₂)
-- These signals create **clear thresholds** between classes
-
-👉 The model effectively learns:
-
-```Bash
-IF (smoke ↑ AND gas ↑) → Fire = 1
-ELSE → 0
-```
-
+### Pipeline design
+A full preprocessing pipeline was built using:
+- ColumnTransformer
+- Pipelines for numeric and categorical features
 
 ---
 
-## 🧠 Interpretation
+## 📈 Exploratory Data Analysis (EDA)
 
-- The problem behaves like a **rule-based detection system**
-- A few features dominate prediction (confirmed via feature importance)
-- Complex models are not strictly necessary
-
----
-
-## ⚠️ Important Note
-
-This is **not overfitting**:
-
-- Test performance is also perfect  
-- Cross-validation is stable  
-- No duplicate rows detected  
-
-Instead, this reflects:
-> **Strong physical relationship between sensor signals and fire events**
+### Key findings:
+- Dataset is imbalanced (~70% fire events)
+- Strong correlation between particle-based features
+- Weak linear relationship between most individual features and target
+- Temporal patterns exist in fire occurrences (UTC importance)
 
 ---
 
-## 📊 What This Project Teaches
+## 🤖 Models Used
 
-- Not all ML problems are difficult  
-- High accuracy can come from **data structure**, not model complexity  
-- Always interpret results — don’t trust metrics blindly  
+### 1. Logistic Regression
+- Used as a baseline linear model
+- Tuned using GridSearchCV
+- Improved balance after tuning but limited by linear assumptions
+
+### 2. Random Forest Classifier
+- Used for capturing non-linear relationships
+- Achieved highest performance after tuning
+- Selected as final model
 
 ---
 
-## 🏁 Conclusion
+## ⚙ Hyperparameter Tuning
 
-The RandomForest model achieved near-perfect performance due to the **inherent separability of fire vs non-fire conditions** in sensor data.
+GridSearchCV was used for optimization:
 
-This project highlights the importance of:
-- understanding the dataset
-- validating results properly
-- interpreting model behavior beyond metrics
+Key parameters:
+- `n_estimators`
+- `max_depth`
+- `min_samples_split`
+- `min_samples_leaf`
+- `class_weight`
+
+---
+
+## 📊 Model Evaluation
+
+### Logistic Regression (Tuned)
+- Accuracy: ~0.82
+- Improved balance between classes
+- Still limited in capturing complex patterns
+
+### Random Forest (Tuned)
+- Accuracy: 1.00
+- Perfect precision, recall, and F1-score
+- Strong generalization after CV
+
+---
+
+## 🔍 Feature Importance Analysis
+
+### 📌 Logistic Regression (Coefficients)
+- Strong positive:
+  - Pressure[hPa]
+  - Raw H2
+- Strong negative:
+  - Raw Ethanol
+  - UTC
+
+---
+
+### 🌲 Random Forest Importance
+- UTC (most important)
+- Pressure[hPa]
+- Raw Ethanol
+- Particle sensors (moderate importance)
+
+---
+
+### 🎯 Permutation Importance (Most reliable)
+- PM2.5 → strongest predictor
+- UTC → strong temporal effect
+- Gas sensors → lower importance than expected
+
+---
+
+## 🏁 Final Model Selection
+
+```python
+final_model = best_model
+````
+
+### Why Random Forest?
+
+* Best overall performance
+* Handles non-linear relationships
+* Stable after cross-validation
+* Robust feature interactions
+
+---
+
+## 🧠 Final Insights
+
+* Fire detection is mainly driven by:
+
+  * ⏱ Time patterns (UTC)
+  * 🌫 Particle concentration (PM2.5)
+* Gas sensors contribute but are not dominant
+* Environmental features (temperature, humidity) have low predictive power
+* Model performance suggests strong separability in dataset
+
+---
+
+## 🚀 Conclusion
+
+This project demonstrates a complete ML pipeline for fire detection:
+
+✔ Data cleaning<br>
+✔ Feature engineering<br>
+✔ Model training<br>
+✔ Hyperparameter tuning<br>
+✔ Evaluation & comparison<br>
+✔ Interpretability analysis<br>
+
+The final Random Forest model provides highly accurate and stable predictions, making it suitable for real-world deployment scenarios (with further validation).
